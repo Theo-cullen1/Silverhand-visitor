@@ -60,7 +60,6 @@
   .q-required { color: var(--danger); }
   .btn-primary { width: 100%; padding: 16px; background: var(--brand); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 6px; font-family: inherit; transition: background 0.15s; }
   .btn-primary:hover { background: var(--brand-dark); }
-  .btn-primary:active { transform: scale(0.99); }
   .btn-secondary { width: 100%; padding: 14px; background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; font-family: inherit; }
   .btn-secondary:hover { background: var(--brand-light); color: var(--brand-dark); }
   .home-row { display: flex; gap: 14px; margin-bottom: 18px; }
@@ -192,7 +191,7 @@
       </div>
       <div id="health-warn" class="warn-box" style="display:none;">
         <i class="ti ti-alert-triangle" style="font-size:20px;flex-shrink:0;margin-top:1px;"></i>
-        <div><strong>Entry may not be permitted.</strong> One or more of your answers indicates a potential food safety risk. Please speak to your host or site manager before entering the production area.</div>
+        <div><strong>Entry may not be permitted.</strong> One or more answers indicates a food safety risk. Please speak to your host before entering the production area.</div>
       </div>
       <button class="btn-primary" onclick="nextToDeclaration()">Continue to declaration &rarr;</button>
       <button class="btn-secondary" onclick="go('screen-signin-details')">&larr; Back</button>
@@ -250,7 +249,7 @@
         <h2 id="so-name" style="font-size:22px;font-weight:700;color:var(--brand-deeper);margin-bottom:6px;"></h2>
         <p id="so-time" style="font-size:13px;color:var(--text-muted);"></p>
         <div id="so-detail" class="detail-box"></div>
-        <p style="font-size:13px;color:var(--text-muted);">Thank you for visiting Silverhand Winery. Please return any PPE or visitor badge to reception.</p>
+        <p style="font-size:13px;color:var(--text-muted);">Thank you for visiting Silverhand Winery. Please return any PPE or visitor badge.</p>
         <div id="sync-status-out" class="sp-status sp-syncing"><i class="ti ti-bolt"></i> Updating Excel via Power Automate&hellip;</div>
       </div>
       <button class="btn-primary" onclick="resetHome()">&larr; Back to home</button>
@@ -260,12 +259,12 @@
 </div>
 
 <script>
-// Power Automate HTTP trigger URL — Silverhand Visitor Sign-In flow
-// Built from parts to avoid any line-break corruption
-const PA_HOST = "defaultd095f64afbf344dcbf74cfac3c1f8305.environment.api.powerplatform.com";
-const PA_PATH = "/powerautomate/automations/direct/workflows/8110643688764793a0a7fa558e099a46/triggers/manual/paths/invoke";
-const PA_PARAMS = "?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=JTpEItArHEK0K7OZsQN5ra2UdcdOWUk38-Mu_kUCkn4";
-const PA_URL = "https://" + PA_HOST + PA_PATH + PA_PARAMS;
+// Power Automate URL — assembled in parts to prevent any line-break issues
+const PA_URL = "https://defaultd095f64afbf344dcbf74cfac3c1f8305.environment.api.powerplatform.com:443"
+  + "/powerautomate/automations/direct/workflows/8110643688764793a0a7fa558e099a46"
+  + "/triggers/manual/paths/invoke"
+  + "?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0"
+  + "&sig=JTpEItArHEK0K7OZsQN5ra2UdcdOWUk38-Mu_kUCkn4";
 
 let visitors      = [];
 let currentSignIn = {};
@@ -275,11 +274,10 @@ function go(id) {
   document.getElementById(id).classList.add('active');
   window.scrollTo(0, 0);
 }
-
 function fmt(d)     { return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
 function fmtFull(d) { return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
 function fmtDate(d) { return d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); }
-function initials(n){ return n.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase(); }
+function initials(n){ return n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase(); }
 
 function tick() {
   const now = new Date();
@@ -295,10 +293,8 @@ function renderSignedIn() {
     : active.map(v => `
         <div class="visitor-row">
           <div class="visitor-avatar">${initials(v.name)}</div>
-          <div>
-            <div class="visitor-name">${v.name}</div>
-            <div class="visitor-meta">${v.company || 'No company'} &middot; In since ${fmt(new Date(v.signInTime))}</div>
-          </div>
+          <div><div class="visitor-name">${v.name}</div>
+          <div class="visitor-meta">${v.company||'No company'} &middot; In since ${fmt(new Date(v.signInTime))}</div></div>
           <div class="visitor-badge">Signed In</div>
         </div>`).join('');
   document.getElementById('signout-list').innerHTML = active.length === 0
@@ -306,19 +302,17 @@ function renderSignedIn() {
     : active.map(v => `
         <div class="visitor-row" onclick="doSignOut('${v.id}')">
           <div class="visitor-avatar">${initials(v.name)}</div>
-          <div>
-            <div class="visitor-name">${v.name}</div>
-            <div class="visitor-meta">${v.company || ''} &middot; In since ${fmt(new Date(v.signInTime))}</div>
-          </div>
+          <div><div class="visitor-name">${v.name}</div>
+          <div class="visitor-meta">${v.company||''} &middot; In since ${fmt(new Date(v.signInTime))}</div></div>
           <i class="ti ti-logout" style="margin-left:auto;font-size:20px;color:var(--text-hint);"></i>
         </div>`).join('');
 }
 
 function nextToHealth() {
-  const name    = document.getElementById('si-name').value.trim();
-  const host    = document.getElementById('si-host').value.trim();
+  const name = document.getElementById('si-name').value.trim();
+  const host = document.getElementById('si-host').value.trim();
   const purpose = document.querySelector('input[name="purpose"]:checked');
-  if (!name || !host || !purpose) { alert('Please complete all required fields before continuing.'); return; }
+  if (!name||!host||!purpose) { alert('Please complete all required fields.'); return; }
   currentSignIn = { name, host, purpose: purpose.value,
     company: document.getElementById('si-company').value.trim(),
     email:   document.getElementById('si-email').value.trim() };
@@ -334,128 +328,90 @@ function nextToDeclaration() {
     q5: document.querySelector('input[name="hq5"]:checked')?.value,
     allergies: document.getElementById('hq-allergies').value.trim()
   };
-  if (!h.q1||!h.q2||!h.q3||!h.q4||!h.q5) { alert('Please answer all required health questions before continuing.'); return; }
+  if (!h.q1||!h.q2||!h.q3||!h.q4||!h.q5) { alert('Please answer all health questions.'); return; }
   const risk = h.q1==='Yes'||h.q2==='Yes'||h.q3==='Yes'||h.q5==='No';
   document.getElementById('health-warn').style.display = risk ? 'flex' : 'none';
-  currentSignIn.health = h;
-  currentSignIn.healthRisk = risk;
+  currentSignIn.health = h; currentSignIn.healthRisk = risk;
   go('screen-signin-declaration');
 }
 
 async function sendToPowerAutomate(payload) {
-  console.log('Sending to Power Automate:', PA_URL);
-  console.log('Payload:', JSON.stringify(payload));
   const res = await fetch(PA_URL, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify(payload)
   });
-  console.log('Response status:', res.status);
-  if (!res.ok) {
-    const txt = await res.text();
-    console.error('Response body:', txt);
-    throw new Error('HTTP ' + res.status + ': ' + txt);
-  }
-  return res;
+  if (!res.ok) throw new Error('HTTP ' + res.status);
 }
 
 async function completeSignIn() {
   if (!document.getElementById('agree-check').checked) {
-    alert('Please tick the declaration checkbox before completing sign-in.'); return;
+    alert('Please tick the declaration checkbox.'); return;
   }
   const now = new Date();
-  const v = { id: 'v'+Date.now(), ...currentSignIn, signInTime: now.toISOString(), signOutTime: null };
+  const v = { id:'v'+Date.now(), ...currentSignIn, signInTime: now.toISOString(), signOutTime: null };
   visitors.push(v);
 
   document.getElementById('success-name').textContent = 'Welcome, ' + v.name + '!';
   document.getElementById('success-time').textContent = 'Signed in at ' + fmt(now) + ' \u00b7 ' + fmtDate(now);
   document.getElementById('success-detail').innerHTML =
     `<strong>Host:</strong> ${v.host} &nbsp;&middot;&nbsp; <strong>Purpose:</strong> ${v.purpose}` +
-    (v.healthRisk ? '<br><span style="color:var(--warn-text);font-weight:700;">&#9888; Health advisory flagged &mdash; speak to host before entering production areas</span>' : '');
+    (v.healthRisk ? '<br><span style="color:var(--warn-text);font-weight:700;">&#9888; Health advisory &mdash; speak to host before entering production areas</span>' : '');
 
   renderSignedIn(); resetForm(); go('screen-signin-success');
 
   const el = document.getElementById('sync-status-in');
   try {
     await sendToPowerAutomate({
-      EventType:  'SignIn',
-      Name:       v.name,
-      Company:    v.company          || '',
-      Email:      v.email            || '',
-      Purpose:    v.purpose,
-      Host:       v.host,
-      SignInTime: v.signInTime,
-      SignOutTime:'',
-      VisitDate:  fmtDate(now),
-      Q1_Illness: v.health.q1,
-      Q2_Skin:    v.health.q2,
-      Q3_Contact: v.health.q3,
-      Q4_Travel:  v.health.q4,
-      Q5_PPE:     v.health.q5,
-      Allergies:  v.health.allergies || '',
-      HealthRisk: v.healthRisk ? 'Yes' : 'No',
-      VisitorID:  v.id
+      EventType:'SignIn', Name:v.name, Company:v.company||'', Email:v.email||'',
+      Purpose:v.purpose, Host:v.host, SignInTime:v.signInTime, SignOutTime:'',
+      VisitDate:fmtDate(now), Q1_Illness:v.health.q1, Q2_Skin:v.health.q2,
+      Q3_Contact:v.health.q3, Q4_Travel:v.health.q4, Q5_PPE:v.health.q5,
+      Allergies:v.health.allergies||'', HealthRisk:v.healthRisk?'Yes':'No', VisitorID:v.id
     });
     el.className = 'sp-status sp-synced';
     el.innerHTML = '<i class="ti ti-circle-check"></i> Saved to Excel successfully!';
   } catch(e) {
     el.className = 'sp-status sp-error';
     el.innerHTML = '<i class="ti ti-alert-circle"></i> Error: ' + e.message;
-    console.error('Power Automate error:', e);
+    console.error('PA error:', e);
   }
 }
 
 async function doSignOut(id) {
-  const v = visitors.find(x => x.id === id);
-  if (!v) return;
-  const now = new Date();
-  v.signOutTime = now.toISOString();
-  const dur = Math.round((now - new Date(v.signInTime)) / 60000);
-
+  const v = visitors.find(x => x.id===id); if (!v) return;
+  const now = new Date(); v.signOutTime = now.toISOString();
+  const dur = Math.round((now - new Date(v.signInTime))/60000);
   document.getElementById('so-name').textContent = 'Goodbye, ' + v.name + '!';
   document.getElementById('so-time').textContent = 'Signed out at ' + fmt(now) + ' \u00b7 ' + fmtDate(now);
   document.getElementById('so-detail').innerHTML =
     `<strong>Duration on site:</strong> ${dur} min &nbsp;&middot;&nbsp; <strong>Host:</strong> ${v.host}`;
-
   renderSignedIn(); go('screen-signout-success');
 
   const el = document.getElementById('sync-status-out');
   try {
     await sendToPowerAutomate({
-      EventType:  'SignOut',
-      Name:       v.name,
-      Company:    v.company          || '',
-      Email:      v.email            || '',
-      Purpose:    v.purpose,
-      Host:       v.host,
-      SignInTime: v.signInTime,
-      SignOutTime:v.signOutTime,
-      VisitDate:  fmtDate(now),
-      Q1_Illness: v.health.q1,
-      Q2_Skin:    v.health.q2,
-      Q3_Contact: v.health.q3,
-      Q4_Travel:  v.health.q4,
-      Q5_PPE:     v.health.q5,
-      Allergies:  v.health.allergies || '',
-      HealthRisk: v.healthRisk ? 'Yes' : 'No',
-      VisitorID:  v.id
+      EventType:'SignOut', Name:v.name, Company:v.company||'', Email:v.email||'',
+      Purpose:v.purpose, Host:v.host, SignInTime:v.signInTime, SignOutTime:v.signOutTime,
+      VisitDate:fmtDate(now), Q1_Illness:v.health.q1, Q2_Skin:v.health.q2,
+      Q3_Contact:v.health.q3, Q4_Travel:v.health.q4, Q5_PPE:v.health.q5,
+      Allergies:v.health.allergies||'', HealthRisk:v.healthRisk?'Yes':'No', VisitorID:v.id
     });
     el.className = 'sp-status sp-synced';
     el.innerHTML = '<i class="ti ti-circle-check"></i> Sign-out recorded in Excel';
   } catch(e) {
     el.className = 'sp-status sp-error';
     el.innerHTML = '<i class="ti ti-alert-circle"></i> Error: ' + e.message;
-    console.error('Power Automate error:', e);
   }
 }
 
 function resetForm() {
-  ['si-name','si-company','si-email','si-host','hq-allergies'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
+  ['si-name','si-company','si-email','si-host','hq-allergies'].forEach(id=>{
+    const el=document.getElementById(id); if(el) el.value='';
   });
-  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
-  document.getElementById('agree-check').checked = false;
-  currentSignIn = {};
+  document.querySelectorAll('input[type="radio"]').forEach(r=>r.checked=false);
+  document.getElementById('agree-check').checked=false;
+  currentSignIn={};
 }
 function resetHome() { renderSignedIn(); go('screen-home'); }
 renderSignedIn();

@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Visitor Register — Silverhand Winery</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.0.0/tabler-icons.min.css">
+<style>
+  :root {
+    --brand:        #00778B;
+    --brand-dark:   #005A6A;
+    --brand-deeper: #004455;
+    --brand-light:  #E0F2F5;
+    --accent:       #C8963A;
+    --bg:           #F4F8F9;
+    --surface:      #FFFFFF;
+    --border:       #D0E6EA;
+    --text:         #1A2E32;
+    --text-muted:   #5A7A80;
+    --text-hint:    #9BB5BA;
+    --danger:       #C0392B;
+    --danger-bg:    #FDECEA;
+    --warn-bg:      #FEF6E7;
+    --warn-border:  #F0C674;
+    --warn-text:    #7A5010;
+    --success:      #1D9E75;
+    --success-bg:   #E1F5EE;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); }
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+  .header { background: var(--brand-deeper); padding: 16px 24px; display: flex; align-items: center; gap: 14px; position: sticky; top: 0; z-index: 10; border-bottom: 3px solid var(--brand); }
+  .header-logo { width: 44px; height: 44px; border-radius: 10px; background: var(--brand); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .header-text h1 { color: #fff; font-size: 18px; font-weight: 700; }
+  .header-text p  { color: rgba(255,255,255,0.55); font-size: 12px; margin-top: 2px; }
+  .salsa-badge { margin-left: auto; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); border-radius: 6px; padding: 5px 11px; color: #fff; font-size: 10px; font-weight: 700; letter-spacing: 1px; flex-shrink: 0; }
+  .content { padding: 22px 18px; max-width: 680px; margin: 0 auto; width: 100%; flex: 1; }
+  .screen { display: none; }
+  .screen.active { display: block; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px; margin-bottom: 14px; }
+  .card-title { font-size: 10px; font-weight: 800; color: var(--brand); margin-bottom: 16px; text-transform: uppercase; letter-spacing: 1.2px; }
+  .field { margin-bottom: 15px; }
+  .field label { display: block; font-size: 13px; color: var(--text-muted); margin-bottom: 5px; font-weight: 600; }
+  .field input[type="text"], .field input[type="email"] { width: 100%; height: 44px; padding: 0 14px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-family: inherit; background: #F8FBFC; color: var(--text); outline: none; transition: border-color 0.15s; }
+  .field input:focus { border-color: var(--brand); background: #fff; }
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-opt { flex: 1; min-width: 78px; }
+  .radio-opt input { display: none; }
+  .radio-opt label { display: block; text-align: center; padding: 10px 6px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; color: var(--text-muted); background: #F8FBFC; transition: all 0.15s; }
+  .radio-opt input:checked + label { background: var(--brand); color: #fff; border-color: var(--brand); }
+  .yn-group { display: flex; gap: 10px; }
+  .yn-opt { flex: 1; }
+  .yn-opt input { display: none; }
+  .yn-opt label { display: block; text-align: center; padding: 13px; border: 1.5px solid var(--border); border-radius: 10px; font-size: 15px; font-weight: 700; cursor: pointer; color: var(--text-muted); background: #F8FBFC; transition: all 0.15s; }
+  .yn-opt.yes input:checked + label { background: var(--success); color: #fff; border-color: var(--success); }
+  .yn-opt.no  input:checked + label { background: var(--danger);  color: #fff; border-color: var(--danger); }
+  .q-block { padding: 15px 0; border-bottom: 1px solid #EEF4F5; }
+  .q-block:last-child { border-bottom: none; padding-bottom: 0; }
+  .q-text { font-size: 14px; color: var(--text); margin-bottom: 12px; line-height: 1.55; }
+  .q-required { color: var(--danger); }
+  .btn-primary { width: 100%; padding: 16px; background: var(--brand); color: #fff; border: none; border-radius: 12px; font-size: 16px; font-weight: 700; cursor: pointer; margin-top: 6px; font-family: inherit; transition: background 0.15s; }
+  .btn-primary:hover { background: var(--brand-dark); }
+  .btn-primary:active { transform: scale(0.99); }
+  .btn-secondary { width: 100%; padding: 14px; background: transparent; color: var(--text-muted); border: 1.5px solid var(--border); border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 10px; font-family: inherit; }
+  .btn-secondary:hover { background: var(--brand-light); color: var(--brand-dark); }
+  .home-row { display: flex; gap: 14px; margin-bottom: 18px; }
+  .btn-big { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; padding: 30px 14px; background: var(--surface); border: 1.5px solid var(--border); border-radius: 14px; cursor: pointer; font-family: inherit; transition: all 0.15s; }
+  .btn-big:hover { border-color: var(--brand); background: var(--brand-light); }
+  .btn-big .icon  { width: 56px; height: 56px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; }
+  .btn-big .label { font-size: 17px; font-weight: 700; color: var(--text); }
+  .btn-big .sub   { font-size: 12px; color: var(--text-hint); }
+  .icon-signin  { background: var(--success-bg); color: var(--success); }
+  .icon-signout { background: #FEF0E6; color: #C0672A; }
+  .visitor-row { display: flex; align-items: center; padding: 13px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; margin-bottom: 8px; gap: 12px; cursor: pointer; transition: border-color 0.15s; }
+  .visitor-row:hover { border-color: var(--brand); }
+  .visitor-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--brand-light); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 800; color: var(--brand-dark); flex-shrink: 0; }
+  .visitor-name { font-size: 14px; font-weight: 600; color: var(--text); }
+  .visitor-meta { font-size: 12px; color: var(--text-hint); margin-top: 2px; }
+  .visitor-badge { margin-left: auto; background: var(--brand-light); color: var(--brand-dark); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; flex-shrink: 0; }
+  .success-icon { width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 34px; margin: 0 auto 18px; }
+  .success-teal { background: var(--brand-light); color: var(--brand); }
+  .success-gold { background: #FEF6E7; color: var(--accent); }
+  .warn-box { background: var(--warn-bg); border: 1px solid var(--warn-border); border-radius: 12px; padding: 14px 16px; margin-bottom: 14px; font-size: 13px; color: var(--warn-text); display: flex; gap: 12px; align-items: flex-start; }
+  .progress { display: flex; gap: 5px; margin-bottom: 18px; }
+  .progress-step { flex: 1; height: 4px; border-radius: 2px; background: var(--border); }
+  .progress-step.done   { background: var(--brand); }
+  .progress-step.active { background: var(--accent); }
+  .timestamp { font-size: 30px; font-weight: 200; color: var(--brand-deeper); text-align: center; margin-bottom: 4px; letter-spacing: 2px; }
+  .datestamp { font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 22px; font-weight: 500; }
+  .sp-status { font-size: 12px; font-weight: 600; padding: 9px 14px; border-radius: 8px; text-align: center; margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 7px; }
+  .sp-syncing { background: var(--brand-light); color: var(--brand-dark); }
+  .sp-synced  { background: var(--success-bg);  color: var(--success); }
+  .sp-error   { background: var(--danger-bg);   color: var(--danger); }
+  .detail-box { background: var(--brand-light); border-radius: 10px; padding: 14px 16px; margin: 16px 0; font-size: 13px; color: var(--brand-deeper); line-height: 1.8; }
+  .detail-box strong { font-weight: 700; }
+  .decl-list { font-size: 13px; color: var(--text); line-height: 2.1; padding-left: 18px; margin-bottom: 16px; }
+  .agree-row { display: flex; gap: 12px; align-items: flex-start; padding-top: 14px; border-top: 1px solid #EEF4F5; cursor: pointer; }
+  .agree-row input[type="checkbox"] { width: 20px; height: 20px; margin-top: 2px; flex-shrink: 0; accent-color: var(--brand); cursor: pointer; }
+  .agree-row span { font-size: 13px; color: var(--text); line-height: 1.55; }
+  .sp-footer { font-size: 11px; color: var(--text-hint); text-align: center; margin-top: 14px; padding-bottom: 10px; line-height: 1.7; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <div class="header-logo"><i class="ti ti-plant-2" style="color:#fff;font-size:22px;"></i></div>
+    <div class="header-text">
+      <h1>Silverhand Winery</h1>
+      <p>Visitor Register &nbsp;&middot;&nbsp; Kent, England &nbsp;&middot;&nbsp; SALSA Compliant</p>
+    </div>
+    <div class="salsa-badge">SALSA</div>
+  </div>
+  <div class="content">
+
+    <!-- HOME -->
+    <div class="screen active" id="screen-home">
+      <div id="clock" class="timestamp"></div>
+      <div id="datedisp" class="datestamp"></div>
+      <div class="home-row">
+        <button class="btn-big" onclick="go('screen-signin-details')">
+          <div class="icon icon-signin"><i class="ti ti-login"></i></div>
+          <div class="label">Sign In</div>
+          <div class="sub">New visitor arrival</div>
+        </button>
+        <button class="btn-big" onclick="go('screen-signout-select')">
+          <div class="icon icon-signout"><i class="ti ti-logout"></i></div>
+          <div class="label">Sign Out</div>
+          <div class="sub">Departing visitor</div>
+        </button>
+      </div>
+      <div class="card">
+        <div class="card-title">Currently signed in</div>
+        <div id="signed-in-list"><p style="font-size:13px;color:var(--text-hint);">No visitors currently signed in.</p></div>
+      </div>
+      <p class="sp-footer"><i class="ti ti-bolt" style="vertical-align:-2px;"></i> Records saved via Power Automate &rarr; Excel &nbsp;&middot;&nbsp; SALSA &amp; UK GDPR compliant</p>
+    </div>
+
+    <!-- STEP 1 -->
+    <div class="screen" id="screen-signin-details">
+      <div class="progress"><div class="progress-step active"></div><div class="progress-step"></div><div class="progress-step"></div></div>
+      <div class="card">
+        <div class="card-title">Step 1 of 3 &mdash; Visitor details</div>
+        <div class="field"><label>Full name <span class="q-required">*</span></label><input type="text" id="si-name" placeholder="First and last name" autocomplete="off"></div>
+        <div class="field"><label>Company / organisation</label><input type="text" id="si-company" placeholder="Your company name" autocomplete="off"></div>
+        <div class="field"><label>Email address</label><input type="email" id="si-email" placeholder="email@example.com" autocomplete="off"></div>
+        <div class="field">
+          <label>Purpose of visit <span class="q-required">*</span></label>
+          <div class="radio-group">
+            <div class="radio-opt"><input type="radio" name="purpose" id="p1" value="Audit / Inspection"><label for="p1">Audit</label></div>
+            <div class="radio-opt"><input type="radio" name="purpose" id="p2" value="Supplier"><label for="p2">Supplier</label></div>
+            <div class="radio-opt"><input type="radio" name="purpose" id="p3" value="Customer"><label for="p3">Customer</label></div>
+            <div class="radio-opt"><input type="radio" name="purpose" id="p4" value="Contractor"><label for="p4">Contractor</label></div>
+            <div class="radio-opt"><input type="radio" name="purpose" id="p5" value="Other"><label for="p5">Other</label></div>
+          </div>
+        </div>
+        <div class="field"><label>Host name <span class="q-required">*</span></label><input type="text" id="si-host" placeholder="Name of person you are meeting" autocomplete="off"></div>
+      </div>
+      <button class="btn-primary" onclick="nextToHealth()">Continue to health questionnaire &rarr;</button>
+      <button class="btn-secondary" onclick="go('screen-home')">&larr; Back</button>
+    </div>
+
+    <!-- STEP 2 -->
+    <div class="screen" id="screen-signin-health">
+      <div class="progress"><div class="progress-step done"></div><div class="progress-step active"></div><div class="progress-step"></div></div>
+      <div class="card">
+        <div class="card-title">Step 2 of 3 &mdash; Health &amp; hygiene declaration</div>
+        <p style="font-size:12px;color:var(--text-hint);margin-bottom:16px;line-height:1.6;">Required under SALSA food safety standards. All answers are confidential and stored securely.</p>
+        <div class="q-block">
+          <div class="q-text">Do you have, or have you had in the last 48 hours, any of the following: diarrhoea, vomiting, nausea, stomach cramps or fever? <span class="q-required">*</span></div>
+          <div class="yn-group"><div class="yn-opt no"><input type="radio" name="hq1" id="hq1y" value="Yes"><label for="hq1y">Yes</label></div><div class="yn-opt yes"><input type="radio" name="hq1" id="hq1n" value="No"><label for="hq1n">No</label></div></div>
+        </div>
+        <div class="q-block">
+          <div class="q-text">Do you have any skin conditions, cuts, wounds or infections on your hands or arms? <span class="q-required">*</span></div>
+          <div class="yn-group"><div class="yn-opt no"><input type="radio" name="hq2" id="hq2y" value="Yes"><label for="hq2y">Yes</label></div><div class="yn-opt yes"><input type="radio" name="hq2" id="hq2n" value="No"><label for="hq2n">No</label></div></div>
+        </div>
+        <div class="q-block">
+          <div class="q-text">Have you been in contact with anyone with a confirmed gastrointestinal illness in the last 48 hours? <span class="q-required">*</span></div>
+          <div class="yn-group"><div class="yn-opt no"><input type="radio" name="hq3" id="hq3y" value="Yes"><label for="hq3y">Yes</label></div><div class="yn-opt yes"><input type="radio" name="hq3" id="hq3n" value="No"><label for="hq3n">No</label></div></div>
+        </div>
+        <div class="q-block">
+          <div class="q-text">Have you travelled outside the UK in the last 14 days? <span class="q-required">*</span></div>
+          <div class="yn-group"><div class="yn-opt no"><input type="radio" name="hq4" id="hq4y" value="Yes"><label for="hq4y">Yes</label></div><div class="yn-opt yes"><input type="radio" name="hq4" id="hq4n" value="No"><label for="hq4n">No</label></div></div>
+        </div>
+        <div class="q-block">
+          <div class="q-text">Are you wearing, or able to wear, suitable protective clothing for production and cellar areas? <span class="q-required">*</span></div>
+          <div class="yn-group"><div class="yn-opt yes"><input type="radio" name="hq5" id="hq5y" value="Yes"><label for="hq5y">Yes</label></div><div class="yn-opt no"><input type="radio" name="hq5" id="hq5n" value="No"><label for="hq5n">No</label></div></div>
+        </div>
+        <div class="q-block">
+          <div class="q-text">Do you have any known allergies or medical conditions we should be aware of?</div>
+          <input type="text" id="hq-allergies" placeholder="Please specify, or leave blank if none" style="width:100%;margin-top:8px;height:44px;padding:0 14px;border:1.5px solid var(--border);border-radius:10px;font-size:14px;font-family:inherit;background:#F8FBFC;outline:none;color:var(--text);">
+        </div>
+      </div>
+      <div id="health-warn" class="warn-box" style="display:none;">
+        <i class="ti ti-alert-triangle" style="font-size:20px;flex-shrink:0;margin-top:1px;"></i>
+        <div><strong>Entry may not be permitted.</strong> One or more of your answers indicates a potential food safety risk. Please speak to your host or site manager before entering the production area.</div>
+      </div>
+      <button class="btn-primary" onclick="nextToDeclaration()">Continue to declaration &rarr;</button>
+      <button class="btn-secondary" onclick="go('screen-signin-details')">&larr; Back</button>
+    </div>
+
+    <!-- STEP 3 -->
+    <div class="screen" id="screen-signin-declaration">
+      <div class="progress"><div class="progress-step done"></div><div class="progress-step done"></div><div class="progress-step active"></div></div>
+      <div class="card">
+        <div class="card-title">Step 3 of 3 &mdash; Declaration &amp; site rules</div>
+        <p style="font-size:14px;color:var(--text);margin-bottom:12px;font-weight:600;">By signing in, I confirm that:</p>
+        <ul class="decl-list">
+          <li>The health information I have provided is accurate and truthful.</li>
+          <li>I will follow all site hygiene, safety and food safety rules whilst on site.</li>
+          <li>I will wear required PPE in all production and cellar areas.</li>
+          <li>I will not eat, drink or smoke outside of designated areas.</li>
+          <li>I understand that my visit details and health declaration will be recorded and retained in accordance with SALSA requirements and UK GDPR.</li>
+          <li>I will report any accidents, incidents or food safety concerns to my host immediately.</li>
+        </ul>
+        <label class="agree-row">
+          <input type="checkbox" id="agree-check">
+          <span>I have read and agree to the above declaration <span class="q-required">*</span></span>
+        </label>
+      </div>
+      <button class="btn-primary" onclick="completeSignIn()">Complete sign-in</button>
+      <button class="btn-secondary" onclick="go('screen-signin-health')">&larr; Back</button>
+    </div>
+
+    <!-- SIGN IN SUCCESS -->
+    <div class="screen" id="screen-signin-success">
+      <div class="card" style="text-align:center;padding:32px 22px;">
+        <div class="success-icon success-teal"><i class="ti ti-circle-check"></i></div>
+        <h2 id="success-name" style="font-size:22px;font-weight:700;color:var(--brand-deeper);margin-bottom:6px;"></h2>
+        <p id="success-time" style="font-size:13px;color:var(--text-muted);"></p>
+        <div id="success-detail" class="detail-box"></div>
+        <p style="font-size:13px;color:var(--text-muted);">Please report to reception. Your record has been saved.</p>
+        <div id="sync-status-in" class="sp-status sp-syncing"><i class="ti ti-bolt"></i> Saving to Excel via Power Automate&hellip;</div>
+      </div>
+      <button class="btn-primary" onclick="resetHome()" style="margin-top:0;">&larr; Back to home</button>
+    </div>
+
+    <!-- SIGN OUT SELECT -->
+    <div class="screen" id="screen-signout-select">
+      <div class="card">
+        <div class="card-title">Select your name to sign out</div>
+        <div id="signout-list"><p style="font-size:13px;color:var(--text-hint);">No visitors currently signed in.</p></div>
+      </div>
+      <button class="btn-secondary" onclick="go('screen-home')">&larr; Back</button>
+    </div>
+
+    <!-- SIGN OUT SUCCESS -->
+    <div class="screen" id="screen-signout-success">
+      <div class="card" style="text-align:center;padding:32px 22px;">
+        <div class="success-icon success-gold"><i class="ti ti-door-exit"></i></div>
+        <h2 id="so-name" style="font-size:22px;font-weight:700;color:var(--brand-deeper);margin-bottom:6px;"></h2>
+        <p id="so-time" style="font-size:13px;color:var(--text-muted);"></p>
+        <div id="so-detail" class="detail-box"></div>
+        <p style="font-size:13px;color:var(--text-muted);">Thank you for visiting Silverhand Winery. Please return any PPE or visitor badge to reception.</p>
+        <div id="sync-status-out" class="sp-status sp-syncing"><i class="ti ti-bolt"></i> Updating Excel via Power Automate&hellip;</div>
+      </div>
+      <button class="btn-primary" onclick="resetHome()">&larr; Back to home</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// Power Automate HTTP trigger URL — Silverhand Visitor Sign-In flow
+// Built from parts to avoid any line-break corruption
+const PA_HOST = "defaultd095f64afbf344dcbf74cfac3c1f8305.environment.api.powerplatform.com";
+const PA_PATH = "/powerautomate/automations/direct/workflows/8110643688764793a0a7fa558e099a46/triggers/manual/paths/invoke";
+const PA_PARAMS = "?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=JTpEItArHEK0K7OZsQN5ra2UdcdOWUk38-Mu_kUCkn4";
+const PA_URL = "https://" + PA_HOST + PA_PATH + PA_PARAMS;
+
+let visitors      = [];
+let currentSignIn = {};
+
+function go(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+
+function fmt(d)     { return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit' }); }
+function fmtFull(d) { return d.toLocaleTimeString('en-GB', { hour:'2-digit', minute:'2-digit', second:'2-digit' }); }
+function fmtDate(d) { return d.toLocaleDateString('en-GB', { weekday:'long', day:'numeric', month:'long', year:'numeric' }); }
+function initials(n){ return n.split(' ').slice(0,2).map(w => w[0]).join('').toUpperCase(); }
+
+function tick() {
+  const now = new Date();
+  document.getElementById('clock').textContent    = fmtFull(now);
+  document.getElementById('datedisp').textContent = fmtDate(now);
+}
+setInterval(tick, 1000); tick();
+
+function renderSignedIn() {
+  const active = visitors.filter(v => !v.signOutTime);
+  document.getElementById('signed-in-list').innerHTML = active.length === 0
+    ? '<p style="font-size:13px;color:var(--text-hint);">No visitors currently signed in.</p>'
+    : active.map(v => `
+        <div class="visitor-row">
+          <div class="visitor-avatar">${initials(v.name)}</div>
+          <div>
+            <div class="visitor-name">${v.name}</div>
+            <div class="visitor-meta">${v.company || 'No company'} &middot; In since ${fmt(new Date(v.signInTime))}</div>
+          </div>
+          <div class="visitor-badge">Signed In</div>
+        </div>`).join('');
+  document.getElementById('signout-list').innerHTML = active.length === 0
+    ? '<p style="font-size:13px;color:var(--text-hint);">No visitors currently signed in.</p>'
+    : active.map(v => `
+        <div class="visitor-row" onclick="doSignOut('${v.id}')">
+          <div class="visitor-avatar">${initials(v.name)}</div>
+          <div>
+            <div class="visitor-name">${v.name}</div>
+            <div class="visitor-meta">${v.company || ''} &middot; In since ${fmt(new Date(v.signInTime))}</div>
+          </div>
+          <i class="ti ti-logout" style="margin-left:auto;font-size:20px;color:var(--text-hint);"></i>
+        </div>`).join('');
+}
+
+function nextToHealth() {
+  const name    = document.getElementById('si-name').value.trim();
+  const host    = document.getElementById('si-host').value.trim();
+  const purpose = document.querySelector('input[name="purpose"]:checked');
+  if (!name || !host || !purpose) { alert('Please complete all required fields before continuing.'); return; }
+  currentSignIn = { name, host, purpose: purpose.value,
+    company: document.getElementById('si-company').value.trim(),
+    email:   document.getElementById('si-email').value.trim() };
+  go('screen-signin-health');
+}
+
+function nextToDeclaration() {
+  const h = {
+    q1: document.querySelector('input[name="hq1"]:checked')?.value,
+    q2: document.querySelector('input[name="hq2"]:checked')?.value,
+    q3: document.querySelector('input[name="hq3"]:checked')?.value,
+    q4: document.querySelector('input[name="hq4"]:checked')?.value,
+    q5: document.querySelector('input[name="hq5"]:checked')?.value,
+    allergies: document.getElementById('hq-allergies').value.trim()
+  };
+  if (!h.q1||!h.q2||!h.q3||!h.q4||!h.q5) { alert('Please answer all required health questions before continuing.'); return; }
+  const risk = h.q1==='Yes'||h.q2==='Yes'||h.q3==='Yes'||h.q5==='No';
+  document.getElementById('health-warn').style.display = risk ? 'flex' : 'none';
+  currentSignIn.health = h;
+  currentSignIn.healthRisk = risk;
+  go('screen-signin-declaration');
+}
+
+async function sendToPowerAutomate(payload) {
+  console.log('Sending to Power Automate:', PA_URL);
+  console.log('Payload:', JSON.stringify(payload));
+  const res = await fetch(PA_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload)
+  });
+  console.log('Response status:', res.status);
+  if (!res.ok) {
+    const txt = await res.text();
+    console.error('Response body:', txt);
+    throw new Error('HTTP ' + res.status + ': ' + txt);
+  }
+  return res;
+}
+
+async function completeSignIn() {
+  if (!document.getElementById('agree-check').checked) {
+    alert('Please tick the declaration checkbox before completing sign-in.'); return;
+  }
+  const now = new Date();
+  const v = { id: 'v'+Date.now(), ...currentSignIn, signInTime: now.toISOString(), signOutTime: null };
+  visitors.push(v);
+
+  document.getElementById('success-name').textContent = 'Welcome, ' + v.name + '!';
+  document.getElementById('success-time').textContent = 'Signed in at ' + fmt(now) + ' \u00b7 ' + fmtDate(now);
+  document.getElementById('success-detail').innerHTML =
+    `<strong>Host:</strong> ${v.host} &nbsp;&middot;&nbsp; <strong>Purpose:</strong> ${v.purpose}` +
+    (v.healthRisk ? '<br><span style="color:var(--warn-text);font-weight:700;">&#9888; Health advisory flagged &mdash; speak to host before entering production areas</span>' : '');
+
+  renderSignedIn(); resetForm(); go('screen-signin-success');
+
+  const el = document.getElementById('sync-status-in');
+  try {
+    await sendToPowerAutomate({
+      EventType:  'SignIn',
+      Name:       v.name,
+      Company:    v.company          || '',
+      Email:      v.email            || '',
+      Purpose:    v.purpose,
+      Host:       v.host,
+      SignInTime: v.signInTime,
+      SignOutTime:'',
+      VisitDate:  fmtDate(now),
+      Q1_Illness: v.health.q1,
+      Q2_Skin:    v.health.q2,
+      Q3_Contact: v.health.q3,
+      Q4_Travel:  v.health.q4,
+      Q5_PPE:     v.health.q5,
+      Allergies:  v.health.allergies || '',
+      HealthRisk: v.healthRisk ? 'Yes' : 'No',
+      VisitorID:  v.id
+    });
+    el.className = 'sp-status sp-synced';
+    el.innerHTML = '<i class="ti ti-circle-check"></i> Saved to Excel successfully!';
+  } catch(e) {
+    el.className = 'sp-status sp-error';
+    el.innerHTML = '<i class="ti ti-alert-circle"></i> Error: ' + e.message;
+    console.error('Power Automate error:', e);
+  }
+}
+
+async function doSignOut(id) {
+  const v = visitors.find(x => x.id === id);
+  if (!v) return;
+  const now = new Date();
+  v.signOutTime = now.toISOString();
+  const dur = Math.round((now - new Date(v.signInTime)) / 60000);
+
+  document.getElementById('so-name').textContent = 'Goodbye, ' + v.name + '!';
+  document.getElementById('so-time').textContent = 'Signed out at ' + fmt(now) + ' \u00b7 ' + fmtDate(now);
+  document.getElementById('so-detail').innerHTML =
+    `<strong>Duration on site:</strong> ${dur} min &nbsp;&middot;&nbsp; <strong>Host:</strong> ${v.host}`;
+
+  renderSignedIn(); go('screen-signout-success');
+
+  const el = document.getElementById('sync-status-out');
+  try {
+    await sendToPowerAutomate({
+      EventType:  'SignOut',
+      Name:       v.name,
+      Company:    v.company          || '',
+      Email:      v.email            || '',
+      Purpose:    v.purpose,
+      Host:       v.host,
+      SignInTime: v.signInTime,
+      SignOutTime:v.signOutTime,
+      VisitDate:  fmtDate(now),
+      Q1_Illness: v.health.q1,
+      Q2_Skin:    v.health.q2,
+      Q3_Contact: v.health.q3,
+      Q4_Travel:  v.health.q4,
+      Q5_PPE:     v.health.q5,
+      Allergies:  v.health.allergies || '',
+      HealthRisk: v.healthRisk ? 'Yes' : 'No',
+      VisitorID:  v.id
+    });
+    el.className = 'sp-status sp-synced';
+    el.innerHTML = '<i class="ti ti-circle-check"></i> Sign-out recorded in Excel';
+  } catch(e) {
+    el.className = 'sp-status sp-error';
+    el.innerHTML = '<i class="ti ti-alert-circle"></i> Error: ' + e.message;
+    console.error('Power Automate error:', e);
+  }
+}
+
+function resetForm() {
+  ['si-name','si-company','si-email','si-host','hq-allergies'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  document.querySelectorAll('input[type="radio"]').forEach(r => r.checked = false);
+  document.getElementById('agree-check').checked = false;
+  currentSignIn = {};
+}
+function resetHome() { renderSignedIn(); go('screen-home'); }
+renderSignedIn();
+</script>
+</body>
+</html>
